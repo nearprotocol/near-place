@@ -12,10 +12,9 @@ initContract = function () {
 }
 
 async function doInitContract() {
-  const config = await nearlib.dev.getConfig();
-  console.log("nearConfig", config);
+  console.log("nearConfig", nearConfig);
   nearplace.near = await nearlib.dev.connect();
-  nearplace.contract = await nearplace.near.loadContract(config.contractName, {
+  nearplace.contract = await nearplace.near.loadContract(nearConfig.contractName, {
     viewMethods: ["getMap", "getChunk"],
     changeMethods: ["setPixel"],
     sender: nearlib.dev.myAccountId
