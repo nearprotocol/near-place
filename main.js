@@ -1,19 +1,9 @@
 // Loads nearlib and this contract into nearplace scope.
 nearplace = {};
-let initPromise;
-initContract = function () {
-  if (nearplace.contract) {
-    return Promise.resolve();
-  }
-  if (!initPromise) {
-    initPromise = doInitContract();
-  }
-  return initPromise;
-}
 
-async function doInitContract() {
+async function initContract() {
   console.log("nearConfig", nearConfig);
-  nearplace.near = await nearlib.dev.connect();
+  nearplace.near = await nearlib.dev.connect(nearConfig);
   nearplace.contract = await nearplace.near.loadContract(nearConfig.contractName, {
     viewMethods: ["getMap", "getChunk"],
     changeMethods: ["setPixel"],
@@ -32,7 +22,7 @@ function sleep(time) {
   });
 }
 
-initContract().catch(console.error);
+let initPromise = initContract().catch(console.error);
 
 const CHUNK_SIZE = 16;
 let lastMap = null;
