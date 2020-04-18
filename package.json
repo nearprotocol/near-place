@@ -1,6 +1,5 @@
 {
-  "name": "@wasm/hello_world_ts",
-  "description": "",
+  "name": "near-place",
   "version": "0.0.1",
   "scripts": {
     "build": "npm run build:contract && npm run build:web",
