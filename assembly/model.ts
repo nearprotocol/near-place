@@ -1,10 +1,13 @@
 // TODO: Figure out how to avoid duplicate identifier in model.near
-import { near as near_ } from './near';
+
+import { storage } from "near-sdk-as";
+
 
 const CHUNK_SIZE = 16;
 const CHUNK_COUNT = 5;
 const START_COLOR = "FFFFFF";
 
+@nearBindgen
 export class Chunk {
   nonce: i32;
   rgb: string[][];
@@ -32,9 +35,25 @@ export class Chunk {
     let oy = y % CHUNK_SIZE;
     this.nonce++;
     this.rgb[ox][oy] = rgb;
+    this.set(x, y);
+  }
+
+  set(x: i32, y: i32): void {
+    storage.set(Chunk.key(x, y), this);
+  }
+
+  static get(x: i32, y: i32): Chunk {
+    let chunk =  storage.get<Chunk>(Chunk.key(x, y));
+    if (chunk == null) {
+      return new Chunk();
+    }
+    return chunk;
   }
 }
 
+let _map: ChunkMap | null = null;
+
+@nearBindgen
 export class ChunkMap {
   chunks: i32[][];
 
@@ -53,6 +72,25 @@ export class ChunkMap {
     let cx = x / CHUNK_SIZE;
     let cy = y / CHUNK_SIZE;
     this.chunks[cx][cy] = chunk.nonce;
+    ChunkMap.map = this;
+  }
+
+
+  static get map(): ChunkMap {
+    if (_map == null) {
+      let res = storage.get<ChunkMap>(nameof<ChunkMap>());
+      if (res != null) {
+        _map = res;
+      } else {
+        _map = new ChunkMap();
+      }
+    }
+    return <ChunkMap>_map;
+  }
+
+  static set map(map: ChunkMap) {
+    _map = map;
+    storage.set(nameof<ChunkMap>(), _map);
   }
 }
 
