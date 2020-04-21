@@ -14,8 +14,9 @@ package-lock.json
 # testing
 /coverage
 
-# production
-/build
+# bundler
+/dist
+.cache
 
 # misc
 .DS_Store
