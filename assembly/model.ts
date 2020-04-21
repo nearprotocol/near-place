@@ -1,5 +1,4 @@
-// TODO: Figure out how to avoid duplicate identifier in model.near
-import { near as near_ } from './near';
+// @nearfile
 
 const CHUNK_SIZE = 16;
 const CHUNK_COUNT = 5;

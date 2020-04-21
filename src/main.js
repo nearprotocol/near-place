@@ -1,13 +1,24 @@
+const nearlib = require('near-api-js');
+const nearConfig = require('./config')(process.env.NODE_ENV);
+
 // Loads nearlib and this contract into nearplace scope.
-nearplace = {};
+let nearplace = {};
 
 async function initContract() {
+  nearConfig.deps = { keyStore: new nearlib.keyStores.BrowserLocalStorageKeyStore() };
   console.log("nearConfig", nearConfig);
-  nearplace.near = await nearlib.dev.connect(nearConfig);
+
+  nearplace.near = await nearlib.connect(nearConfig);
+  nearplace.walletConnection = new nearlib.WalletConnection(nearplace.near);
+  if (nearplace.walletConnection.isSignedIn()) {
+    nearplace.account = nearplace.walletConnection.account();
+  } else {
+    nearplace.account = new nearlib.Account(nearplace.near.connection, nearConfig.contractName);
+  }
   nearplace.contract = await nearplace.near.loadContract(nearConfig.contractName, {
     viewMethods: ["getMap", "getChunk"],
     changeMethods: ["setPixel"],
-    sender: nearlib.dev.myAccountId
+    sender: nearplace.account.accountId
   });
 
   loadBoardAndDraw().catch(console.error);
@@ -84,6 +95,10 @@ function getMousepos(canvas, evt){
 }
 
 function myCanvasClick(e) {
+  if (!nearplace.walletConnection.isSignedIn()) {
+    nearplace.walletConnection.requestSignIn(nearConfig.contractName, 'NEAR Place');
+  }
+
   const canvas = document.getElementById("myCanvas");
   const ctx = canvas.getContext("2d");
   const position = getMousepos(canvas, e);
@@ -95,17 +110,23 @@ function myCanvasClick(e) {
   ctx.fillRect(x*10, y*10, 10, 10);
 
   setPixelQueue.push({ x, y, rgb });
-  function setNextPixel() {
-    nearplace.contract.setPixel(setPixelQueue[0]).finally(() => {
+  async function setNextPixel() {
+    try {
+      await nearplace.contract.setPixel(setPixelQueue[0]);
+    } catch (e) {
+      console.error('Error setting pixel', e);
+    } finally {
       setPixelQueue.splice(0, 1);
       if (setPixelQueue.length == 0) {
         loadBoardAndDraw();
       } else {
         setNextPixel();
       } 
-    });
+    };
   }
   if (setPixelQueue.length == 1) {
     setNextPixel();
   }
 }
+
+window.myCanvasClick = myCanvasClick;

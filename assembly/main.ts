@@ -1,12 +1,10 @@
-import "allocator/arena";
 export { memory };
 
-import { context, storage, near } from "./near";
+import { context, storage, near } from "near-runtime-ts";
 
-import { Chunk, ChunkMap } from "./model.near"
+import { Chunk, ChunkMap } from "./model"
 
 // --- contract code goes below
-
 
 export function setPixel(x: i32, y: i32, rgb: string): void {
   let chunk = getChunk(x, y);
